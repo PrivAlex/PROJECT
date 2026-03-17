@@ -1,5 +1,16 @@
 <h1>Список заказов</h1>
 
+<form method="GET" action="{{ route('orders.index') }}">
+
+    <input type="text"
+           name="search"
+           value="{{ request()->get('search') }}"
+           placeholder="Поиск">
+
+    <button type="submit">Найти</button>
+
+</form>
+
 <ul>
     @foreach($orders as $order)
         <li>
@@ -19,5 +30,5 @@
             </form>
         </li>
     @endforeach
-    {{$orders->links()}}
+        {{ $orders->withQueryString()->links() }}
 </ul>

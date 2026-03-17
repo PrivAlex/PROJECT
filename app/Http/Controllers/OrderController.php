@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Client;
 use App\Models\Order;
 use App\Http\Requests\StoreOrderRequest;
@@ -14,9 +13,21 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('client')->paginate(10);
+        $query = Order::with('client');
+
+        if ($request->search) {
+            $query->where(function($searchQuery) use ($request) {
+                $searchQuery->where('title', 'like', '%' . $request->search . '%')
+                    ->orWhere('amount', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('client', function ($query) use ($request) {
+                        $query->where('name' , 'like' , '%'  . request('search') . '%');
+                    });
+            });
+        }
+
+        $orders = $query->paginate(10);
         return view('orders.index' , compact('orders'));
     }
 
