@@ -11,6 +11,7 @@
 
 </form>
 
+
 <ul>
     @foreach($orders as $order)
         <li>
@@ -23,7 +24,7 @@
             <a href="{{ route('orders.edit', $order) }}">Редактировать</a>
 
             <!-- Удалить заказ -->
-            <form action="{{ route('orders.destroy', $order) }}" method="POST" style="display:inline;">
+            <form action="{{ route('orders.destroy', $order) }}?admin=1" method="POST" style="display:inline;">
                 @csrf
                 @method('DELETE')
                 <button type="submit">Удалить</button>
