@@ -18,12 +18,21 @@
             {{ $client->name }} — {{ $client->email }}
             <a href="{{ route('clients.edit', $client->id) }}">Редактировать</a>
             <a href="{{ route('clients.show', $client->id) }}">Открыть</a>
-            <form action="{{ route('clients.destroy', $client->id) }}" method="POST" style="display:inline;">
-                @csrf
-                @method('DELETE')
-                <button type="submit">Удалить</button>
-            </form>
+            @auth
+                @if(auth()->user()->isAdmin())
+                    <form method="POST" action="{{ route('clients.destroy', $client->id) }}"  style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit">Удалить</button>
+                    </form>
+                @endif
+            @endauth
         </li>
     @endforeach
         {{ $clients->withQueryString()->links() }}
+
+        <form method="POST" action="{{route('logout')}}">
+            @csrf
+            <button type="submit">Logout</button>
+        </form>
 </ul>

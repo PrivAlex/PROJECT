@@ -9,14 +9,23 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::resource('clients', ClientController::class);
 
-Route::resource('orders', OrderController::class)->except('destroy');
+Route::middleware(['auth'])->group(function () {
+    Route::resource('clients', ClientController::class);
+    Route::resource('orders', OrderController::class);
+    Route::resource('payments', PaymentController::class);
+});
 
-Route::delete('/orders/{order}', [OrderController::class, 'destroy'])
-    ->middleware('admin')
-    ->name('orders.destroy');
 
-Route::resource('payments', PaymentController::class);
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+});
+
+
+
+
 
 require __DIR__.'/auth.php';

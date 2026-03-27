@@ -17,6 +17,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 1. Создаём 2 админа и 8 обычных пользователей
+        $admins = User::factory()->count(2)->create(['role' => User::ROLE_ADMIN]);
+        $users  = User::factory()->count(8)->create(['role' => User::ROLE_USER]);
+
+        $allUsers = $admins->merge($users); // коллекция всех пользователей
+
         Client::factory()
             ->count(20)
             ->create()
