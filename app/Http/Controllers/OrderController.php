@@ -15,7 +15,11 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with('client');
+        $query = Order::query();
+
+        if(!auth()->user()->isAdmin()){
+            $query->where('user_id' , auth()->id());
+        }
 
         if ($request->search) {
             $query->where(function($searchQuery) use ($request) {

@@ -18,6 +18,7 @@ class OrderFactory extends Factory
             'title' => $this->faker->words(3, true),
             'amount' => $this->faker->randomFloat(2, 100, 500),
             'status' => $this->faker->boolean(),
+            'user_id' => null,
         ];
     }
 }

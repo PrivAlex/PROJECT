@@ -1,4 +1,8 @@
-    <h1>Список клиентов</h1>
+<head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+
+<h1>Список клиентов</h1>
     <form method="GET" action="{{ route('clients.index') }}">
 
         <input type="text"
@@ -18,15 +22,13 @@
             {{ $client->name }} — {{ $client->email }}
             <a href="{{ route('clients.edit', $client->id) }}">Редактировать</a>
             <a href="{{ route('clients.show', $client->id) }}">Открыть</a>
-            @auth
-                @if(auth()->user()->isAdmin())
                     <form method="POST" action="{{ route('clients.destroy', $client->id) }}"  style="display:inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit">Удалить</button>
+                        @can('delete' , $client)
+                            <button type="submit">Удалить</button>
+                        @endcan
                     </form>
-                @endif
-            @endauth
         </li>
     @endforeach
         {{ $clients->withQueryString()->links() }}

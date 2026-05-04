@@ -16,6 +16,10 @@ class ClientController extends Controller
     {
         $query = Client::query();
 
+        if(!auth()->user()->isAdmin()){
+            $query->where('user_id' , auth()->id());
+        }
+
         if ($request->search) {
             $query->where(function($searchQuery) use ($request) {
                 $searchQuery->where('name', 'like', '%' . $request->search . '%')
@@ -80,7 +84,9 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        dd($client->id); // сработает, если URL правильный и клиент существует
+        $this->authorize('delete', $client);
         $client->delete();
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
     }
 }

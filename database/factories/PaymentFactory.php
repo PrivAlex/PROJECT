@@ -18,6 +18,7 @@ class PaymentFactory extends Factory
         return [
             'amount' => $this->faker->randomFloat(2, 100, 500),
             'method' => $this->faker->randomElement(['cash', 'card', 'bank_transfer']),
+            'user_id' => null,
         ];
     }
 }

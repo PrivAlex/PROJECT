@@ -16,7 +16,13 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        $payments = Payment::with('client' , 'order')->paginate(10);
+        $query = Payment::query();
+
+        if(!auth()->user()->isAdmin()){
+            $query->where('user_id' , auth()->id());
+        }
+
+        $payments = $query->with('client' , 'order')->paginate(10);
         return view('payments.index', compact('payments'));
     }
 
