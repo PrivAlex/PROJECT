@@ -26,6 +26,7 @@ class StoreClientRequest extends FormRequest
             'email' => 'required|email|unique:clients,email',
             'phone' => 'required|string|max:20',
             'notes' => 'nullable|string',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 }

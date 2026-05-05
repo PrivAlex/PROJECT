@@ -17,4 +17,12 @@
     </ul>
 @endif
 
+<div>
+    @if($client->avatar)
+        <img src="{{ Storage::url($client->avatar) }}" width="1000">
+    @else
+        <p>Нет аватара</p>
+    @endif
+</div>
+
 

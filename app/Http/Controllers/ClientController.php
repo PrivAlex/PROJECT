@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
@@ -46,8 +47,13 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $data = $request->validated();
+
+        if ($request->hasFile('avatar')){
+            $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
+        }
+
         Client::create ($data);
-        return redirect()->route('clients.index')->with("ЧИНАЗЕС!!!!!!!!");
+        return redirect()->route('clients.index')->with('success' , 'Клиент создан');
     }
 
     /**
@@ -71,12 +77,17 @@ class ClientController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateClientRequest $request, CLient $client)
+    public function update(UpdateClientRequest $request, Client $client)
     {
         $data = $request->validated();
+        if ($request->hasFile('avatar')){
+            if ($client->avatar){
+            Storage::disk('public')->delete($client->avatar);
+            }
+            $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
+        }
         $client->update($data);
-
-        return redirect()->route('clients.index');
+        return redirect()->route('clients.index')->with('success' , 'Клиент изменен');
     }
 
     /**

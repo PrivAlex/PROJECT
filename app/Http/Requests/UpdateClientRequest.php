@@ -30,6 +30,7 @@ class UpdateClientRequest extends FormRequest
             'email' => ['required', 'email', Rule::unique('clients', 'email')->ignore($clientId),],
             'phone' => 'required|string|max:20',
             'notes' => 'nullable|string',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 }
