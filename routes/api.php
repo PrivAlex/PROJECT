@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +26,14 @@ Route::post('/login', function (Request $request) {
     return response()->json(['token' => $token, 'user' => $user]);
 });
 
+Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Logged out']);
+});
+
 // Защищённые маршруты (требуют токен)
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('orders', OrderController::class);
+    Route::apiResource('payments', PaymentController::class);
 });

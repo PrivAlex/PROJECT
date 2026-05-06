@@ -7,9 +7,11 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ClientController extends Controller
 {
+    use AuthorizesRequests;
     public function index()
     {
         $user = auth()->user();

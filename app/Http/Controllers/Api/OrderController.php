@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Order;
 use App\Http\Requests\StoreOrderRequest;
@@ -10,6 +12,7 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -26,36 +29,24 @@ class OrderController extends Controller
                 $searchQuery->where('title', 'like', '%' . $request->search . '%')
                     ->orWhere('amount', 'like', '%' . $request->search . '%')
                     ->orWhereHas('client', function ($query) use ($request) {
-                        $query->where('name' , 'like' , '%'  . request('search') . '%');
+                        $query->where('name' , 'like' , '%'  . $request->search . '%');
                     });
             });
         }
 
-        $orders = $query->paginate(10);
-        return view('orders.index' , compact('orders'));
+        $orders = $query->with('client')->paginate(10);
+        return response()->json($orders);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $clients = Client::all(); // чтобы выбрать клиента в форме
-        return view('orders.create', compact('clients'));
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreOrderRequest $request)
     {
         $data = $request->validated();
         // Если чекбокс не отмечен, status будет null → приводим к false
         $data['status'] = $request->has('status');
         $data['user_id'] = auth()->id();
-
-        Order::create($data);
-        return redirect()->route('orders.index');
+        $order=Order::create($data);
+        return response()->json($order , 201);
     }
 
     /**
@@ -63,26 +54,19 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        $this->authorize('view', $order);
         $order->load('client');
-        return view('orders.show', compact('order'));
+        return response()->json($order);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Order $order)
-    {
-        $clients = Client::all();
-
-        return view('orders.edit', compact('order', 'clients'));
-    }
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
+        $this->authorize('update', $order);
         $data = $request->validated();
         $data['status'] = $request->has('status');
         $order->update($data);
-        return redirect()->route('orders.index');
+        return response()->json($order);
     }
 
     /**
@@ -90,7 +74,8 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        $this->authorize('delete', $order);
         $order->delete();
-        return redirect()->route('orders.index');
+        return response()->json(null , 204);
     }
 }
