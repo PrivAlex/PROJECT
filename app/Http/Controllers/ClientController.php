@@ -7,6 +7,7 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendWelcomeEmail;
 
 class ClientController extends Controller
 {
@@ -52,7 +53,10 @@ class ClientController extends Controller
             $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
         }
 
-        Client::create ($data);
+        $data['user_id'] = auth()->id();
+        $client = Client::create($data);
+
+        SendWelcomeEmail::dispatch($client);
         return redirect()->route('clients.index')->with('success' , 'Клиент создан');
     }
 

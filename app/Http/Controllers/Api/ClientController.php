@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
+use App\Jobs\SendWelcomeEmail;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -33,6 +34,7 @@ class ClientController extends Controller
         }
         $data['user_id'] = auth()->id();
         $client = Client::create($data);
+        SendWelcomeEmail::dispatch($client);
         return response()->json($client, 201);
     }
 
