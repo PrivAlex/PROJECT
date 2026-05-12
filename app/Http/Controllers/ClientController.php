@@ -8,9 +8,11 @@ use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\SendWelcomeEmail;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ClientController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -63,9 +65,10 @@ class ClientController extends Controller
     /**
      * Display the specified resource.
      */
-        public function show($id)
+        public function show(Client $client)
         {
-            $client = Client::with('orders')->findOrFail($id);
+            $this->authorize('view', $client);
+            $client->load('orders');
             return view('clients.show', compact('client'));
         }
 

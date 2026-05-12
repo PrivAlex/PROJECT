@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OrderController extends Controller
 {
@@ -18,23 +19,30 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::query();
+        $user = auth()->user();
+        $cacheKey = 'orders_' . $user->id . '_' . ($request->search ?? 'null') . '_page_' . ($request->page ?? 1);
 
-        if(!auth()->user()->isAdmin()){
-            $query->where('user_id' , auth()->id());
-        }
+        \Log::info('Cache key: ' . $cacheKey); // теперь переменная определена
 
-        if ($request->search) {
-            $query->where(function($searchQuery) use ($request) {
-                $searchQuery->where('title', 'like', '%' . $request->search . '%')
-                    ->orWhere('amount', 'like', '%' . $request->search . '%')
-                    ->orWhereHas('client', function ($query) use ($request) {
-                        $query->where('name' , 'like' , '%'  . $request->search . '%');
-                    });
-            });
-        }
+        $orders = Cache::remember($cacheKey, 300, function () use ($user, $request) {
+            \Log::info('Orders retrieved from cache or DB');
+            $query = Order::query();
 
-        $orders = $query->with('client')->paginate(10);
+            if (!$user->isAdmin()) {
+                $query->where('user_id', $user->id);
+            }
+
+            if ($request->search) {
+                $query->where(function($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->search . '%')
+                        ->orWhere('amount', 'like', '%' . $request->search . '%')
+                        ->orWhereHas('client', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'));
+                });
+            }
+
+            return $query->with('client')->paginate(10);
+        });
+
         return response()->json($orders);
     }
 

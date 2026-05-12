@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
 
 // Защищённые маршруты (требуют токен)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('clients', ClientController::class);
-    Route::apiResource('orders', OrderController::class);
-    Route::apiResource('payments', PaymentController::class);
+    Route::apiResource('clients', ClientController::class)->names('api.clients');
+    Route::apiResource('orders', OrderController::class)->names('api.orders');
+    Route::apiResource('payments', PaymentController::class)->names('api.payments');
 });
