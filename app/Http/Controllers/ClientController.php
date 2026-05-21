@@ -6,9 +6,11 @@ use App\Models\Client;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\SendWelcomeEmail;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class ClientController extends Controller
 {
@@ -65,12 +67,16 @@ class ClientController extends Controller
     /**
      * Display the specified resource.
      */
-        public function show(Client $client)
-        {
-            $this->authorize('view', $client);
-            $client->load('orders');
-            return view('clients.show', compact('client'));
-        }
+    public function show(Client $client)
+    {
+        $this->authorize('view', $client);
+        $client = Cache::remember('client_' . $client->id, 3600, function() use ($client) {
+            \Log::info('Загрузка из БД, клиент id=' . $client->id);
+            return $client->load('orders');
+        });
+        \Log::info('Клиент ' . $client->id . ' загружен из ' . (Cache::has('client_' . $client->id) ? 'кеша' : 'БД (ошибка?)'));
+        return view('clients.show', compact('client'));
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -86,6 +92,7 @@ class ClientController extends Controller
      */
     public function update(UpdateClientRequest $request, Client $client)
     {
+        $this->authorize('update', $client);
         $data = $request->validated();
         if ($request->hasFile('avatar')){
             if ($client->avatar){
@@ -94,6 +101,7 @@ class ClientController extends Controller
             $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
         }
         $client->update($data);
+        Cache::forget('client_' . $client->id);
         return redirect()->route('clients.index')->with('success' , 'Клиент изменен');
     }
 
@@ -102,9 +110,9 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
-        dd($client->id); // сработает, если URL правильный и клиент существует
         $this->authorize('delete', $client);
         $client->delete();
+        Cache::forget('client_' . $client->id);
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
     }
 }
