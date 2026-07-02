@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\SendWelcomeEmail;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-
+use Inertia\Inertia;
 
 class ClientController extends Controller
 {
     use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
@@ -22,8 +23,8 @@ class ClientController extends Controller
     {
         $query = Client::query();
 
-        if(!auth()->user()->isAdmin()){
-            $query->where('user_id' , auth()->id());
+        if (!auth()->user()->isAdmin()) {
+            $query->where('user_id', auth()->id());
         }
 
         if ($request->search) {
@@ -35,7 +36,8 @@ class ClientController extends Controller
         }
 
         $clients = $query->paginate(10);
-        return view('clients.index' , compact('clients'));
+
+        return Inertia::render('Clients/Index', ['clients' => $clients]);
     }
 
     /**
@@ -43,7 +45,7 @@ class ClientController extends Controller
      */
     public function create()
     {
-        return view('clients.create');
+        return Inertia::render('Clients/Create');
     }
 
     /**
@@ -53,15 +55,16 @@ class ClientController extends Controller
     {
         $data = $request->validated();
 
-        if ($request->hasFile('avatar')){
-            $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
+        if ($request->hasFile('avatar')) {
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
         $data['user_id'] = auth()->id();
         $client = Client::create($data);
 
         SendWelcomeEmail::dispatch($client);
-        return redirect()->route('clients.index')->with('success' , 'Клиент создан');
+
+        return redirect()->route('clients.index')->with('success', 'Клиент создан');
     }
 
     /**
@@ -70,21 +73,22 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         $this->authorize('view', $client);
+
         $client = Cache::remember('client_' . $client->id, 3600, function() use ($client) {
-            \Log::info('Загрузка из БД, клиент id=' . $client->id);
             return $client->load('orders');
         });
-        \Log::info('Клиент ' . $client->id . ' загружен из ' . (Cache::has('client_' . $client->id) ? 'кеша' : 'БД (ошибка?)'));
-        return view('clients.show', compact('client'));
+
+        return Inertia::render('Clients/Show', ['client' => $client]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(Client $client)
     {
-        $client = Client::findOrFail($id);
-        return view('clients.edit', compact('client'));
+        return Inertia::render('Clients/Edit', [
+            'client' => $client
+        ]);
     }
 
     /**
@@ -93,16 +97,20 @@ class ClientController extends Controller
     public function update(UpdateClientRequest $request, Client $client)
     {
         $this->authorize('update', $client);
+
         $data = $request->validated();
-        if ($request->hasFile('avatar')){
-            if ($client->avatar){
-            Storage::disk('public')->delete($client->avatar);
+
+        if ($request->hasFile('avatar')) {
+            if ($client->avatar) {
+                Storage::disk('public')->delete($client->avatar);
             }
-            $data['avatar'] = $request->file('avatar')->store('avatars' , 'public');
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
+
         $client->update($data);
         Cache::forget('client_' . $client->id);
-        return redirect()->route('clients.index')->with('success' , 'Клиент изменен');
+
+        return redirect()->route('clients.index')->with('success', 'Клиент изменен');
     }
 
     /**
@@ -113,6 +121,7 @@ class ClientController extends Controller
         $this->authorize('delete', $client);
         $client->delete();
         Cache::forget('client_' . $client->id);
-        return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
+
+        return redirect()->route('clients.index')->with('success', 'Клиент удален');
     }
 }
