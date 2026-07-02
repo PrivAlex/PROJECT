@@ -4,6 +4,9 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h1 class="text-2xl font-bold mb-4">Список клиентов</h1>
+                    <a :href="route('clients.create')" class="text-blue-500 hover:underline">
+                        Создать клиента
+                    </a>
 
                     <!-- Таблица -->
                     <table class="min-w-full border border-grey-200">
