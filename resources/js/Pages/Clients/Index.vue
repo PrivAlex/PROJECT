@@ -4,7 +4,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h1 class="text-2xl font-bold mb-4">Список клиентов</h1>
-                    <a :href="route('clients.create')" class="text-blue-500 hover:underline">
+                    <a :href="route('clients.create')" class="text-4xl-green mb-6">
                         Создать клиента
                     </a>
 
@@ -17,6 +17,7 @@
                             <th class="px-4 py-2 border">Email</th>
                             <th class="px-4 py-2 border">Телефон</th>
                             <th class="px-4 py-2 border">Действия</th>
+                            <th class="px-4 py-2 border">Редактировать</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -28,6 +29,11 @@
                             <td class="px-4 py-2 border text-center">
                                 <a :href="route('clients.show', client.id)" class="text-blue-500 hover:underline">
                                     Просмотр
+                                </a>
+                            </td>
+                            <td class="px-4 py-2 border text-center">
+                                <a :href="route('clients.edit', client.id)" class="text-blue-500 hover:underline">
+                                    Редактирование
                                 </a>
                             </td>
                         </tr>

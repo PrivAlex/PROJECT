@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -17,22 +18,22 @@ class OrderController extends Controller
     {
         $query = Order::query();
 
-        if(!auth()->user()->isAdmin()){
-            $query->where('user_id' , auth()->id());
+        if (!auth()->user()->isAdmin()) {
+            $query->where('user_id', auth()->id());
         }
 
         if ($request->search) {
-            $query->where(function($searchQuery) use ($request) {
+            $query->where(function ($searchQuery) use ($request) {
                 $searchQuery->where('title', 'like', '%' . $request->search . '%')
                     ->orWhere('amount', 'like', '%' . $request->search . '%')
                     ->orWhereHas('client', function ($query) use ($request) {
-                        $query->where('name' , 'like' , '%'  . request('search') . '%');
+                        $query->where('name', 'like', '%' . request('search') . '%');
                     });
             });
         }
 
-        $orders = $query->paginate(10);
-        return view('orders.index' , compact('orders'));
+        $orders = $query->with('client')->paginate(10);
+        return Inertia::render('Orders/Index', ['orders' => $orders]);
     }
 
     /**
