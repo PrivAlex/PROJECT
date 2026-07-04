@@ -8,6 +8,7 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
@@ -23,7 +24,7 @@ class PaymentController extends Controller
         }
 
         $payments = $query->with('client' , 'order')->paginate(10);
-        return view('payments.index', compact('payments'));
+        return Inertia::render('Payments/Index' , ['payments' => $payments]);
     }
 
     /**
@@ -33,7 +34,7 @@ class PaymentController extends Controller
     {
         $clients = Client::all();
         $orders = Order::all();
-        return view('payments.create', compact('clients', 'orders'));
+        return Inertia::render('Payments/Create' , ['clients' => $clients , 'orders' => $orders]);
     }
 
     /**
@@ -52,7 +53,7 @@ class PaymentController extends Controller
     public function show(Payment $payment)
     {
         $payment->load('client' , 'order');
-        return view('payments.show', compact('payment'));
+        return inertia::render('Payments/Show' , ['payment' => $payment]);
     }
 
     /**
@@ -60,11 +61,15 @@ class PaymentController extends Controller
      */
     public function edit(Payment $payment)
     {
-        $client = $payment->client;
+        $clients = Client::all(); // ← добавить
 
-        $orders = Order::where('client_id', $client->id)->get();
+        $orders = Order::where('client_id', $payment->client_id)->get();
 
-        return view('payments.edit', compact('payment', 'client', 'orders'));
+        return Inertia::render('Payments/Edit', [
+            'payment' => $payment,
+            'orders' => $orders,
+            'clients' => $clients, // ← добавить
+        ]);
     }
 
     /**

@@ -34,6 +34,6 @@
 
 <script setup>
 defineProps({
-    order: Object, // ← один объект заказа
+    order: Object,
 });
 </script>
