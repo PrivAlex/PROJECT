@@ -42,7 +42,7 @@ class OrderController extends Controller
     public function create()
     {
         $clients = Client::all(); // чтобы выбрать клиента в форме
-        return view('orders.create', compact('clients'));
+        return Inertia::render('Orders/Create', ['clients' => $clients]);
     }
 
     /**
@@ -65,7 +65,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load('client');
-        return view('orders.show', compact('order'));
+        return Inertia::render('Orders/Show', ['order' => $order]);
     }
 
     /**
@@ -75,7 +75,7 @@ class OrderController extends Controller
     {
         $clients = Client::all();
 
-        return view('orders.edit', compact('order', 'clients'));
+        return Inertia::render('Orders/Edit', ['order' => $order, 'clients' => $clients]);
     }
 
     public function update(UpdateOrderRequest $request, Order $order)
