@@ -2,126 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
+use App\DTO\ClientDTO;
+use App\Services\ClientService;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
+use App\Models\Client;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
-use App\Jobs\SendWelcomeEmail;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
 class ClientController extends Controller
 {
-    use AuthorizesRequests;
+    public function __construct(
+        private readonly ClientService $clientService
+    ) {}
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $query = Client::query();
-
-        if (!auth()->user()->isAdmin()) {
-            $query->where('user_id', auth()->id());
-        }
-
-        if ($request->search) {
-            $query->where(function($searchQuery) use ($request) {
-                $searchQuery->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%')
-                    ->orWhere('phone', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        $clients = $query->paginate(10);
-
+        $clients = $this->clientService->getAllPaginated(10);
         return Inertia::render('Clients/Index', ['clients' => $clients]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('Clients/Create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreClientRequest $request)
     {
-        $data = $request->validated();
-
-        if ($request->hasFile('avatar')) {
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        $data['user_id'] = auth()->id();
-        $client = Client::create($data);
-
-        SendWelcomeEmail::dispatch($client);
+        $dto = ClientDTO::fromRequest($request->validated());
+        $client = $this->clientService->create($dto);
 
         return redirect()->route('clients.index')->with('success', 'Клиент создан');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Client $client)
     {
-        $this->authorize('view', $client);
-
-        $client = Cache::remember('client_' . $client->id, 3600, function() use ($client) {
-            return $client->load('orders');
-        });
-
+        $client = $this->clientService->findWithOrders($client->id);
         return Inertia::render('Clients/Show', ['client' => $client]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Client $client)
-    {
-        return Inertia::render('Clients/Edit', [
-            'client' => $client
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateClientRequest $request, Client $client)
     {
-        $this->authorize('update', $client);
+        $dto = ClientDTO::fromRequest($request->validated());
+        $this->clientService->update($client, $dto);
 
-        $data = $request->validated();
-
-        if ($request->hasFile('avatar')) {
-            if ($client->avatar) {
-                Storage::disk('public')->delete($client->avatar);
-            }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        $client->update($data);
-        Cache::forget('client_' . $client->id);
-
-        return redirect()->route('clients.index')->with('success', 'Клиент изменен');
+        return redirect()->route('clients.index')->with('success', 'Клиент обновлён');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Client $client)
     {
-        $this->authorize('delete', $client);
-        $client->delete();
-        Cache::forget('client_' . $client->id);
-
-        return redirect()->route('clients.index')->with('success', 'Клиент удален');
+        $this->clientService->delete($client);
+        return redirect()->route('clients.index')->with('success', 'Клиент удалён');
     }
 }
