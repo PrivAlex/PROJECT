@@ -22,6 +22,11 @@ class ClientController extends Controller
         return Inertia::render('Clients/Index', ['clients' => $clients]);
     }
 
+    public function create()
+    {
+        return Inertia::render('Clients/Create');
+    }
+
     public function store(StoreClientRequest $request)
     {
         $dto = ClientDTO::fromRequest($request->validated());
@@ -34,6 +39,13 @@ class ClientController extends Controller
     {
         $client = $this->clientService->findWithOrders($client->id);
         return Inertia::render('Clients/Show', ['client' => $client]);
+    }
+
+    public function edit(Client $client)
+    {
+        return Inertia::render('Clients/Edit', [
+            'client' => $client
+        ]);
     }
 
     public function update(UpdateClientRequest $request, Client $client)
